@@ -46,15 +46,53 @@ def addborder(i: pygame.Surface):
 	r.blit(i, (s, s))
 	return r
 
+def addline(i: pygame.Surface):
+	r = i.copy()
+	frompos = (random.randint(0, r.get_width()), random.randint(0, r.get_height()))
+	topos = (random.randint(0, r.get_width()), random.randint(0, r.get_height()))
+	pygame.draw.line(r, (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)), frompos, topos, random.randint(1, 20))
+	return r
+
+def addcopy(i: pygame.Surface):
+	r = i.copy()
+	cropped = pygame.Surface((random.randint(0, r.get_width() // 2), random.randint(0, r.get_height() // 2)))
+	cropped.blit(r, (random.randint(0, r.get_width() // 2), random.randint(0, r.get_height() // 2)))
+	r.blit(cropped, (random.randint(0, r.get_width() // 2), random.randint(0, r.get_height() // 2)))
+	return r
+
+def negate_red(i: pygame.Surface):
+	r = i.copy()
+	for x in range(r.get_width()):
+		for y in range(r.get_height()):
+			this = r.get_at((x, y))
+			r.set_at((x, y), (255 - this[0], this[1], this[2]))
+	return r
+
+def negate_green(i: pygame.Surface):
+	r = i.copy()
+	for x in range(r.get_width()):
+		for y in range(r.get_height()):
+			this = r.get_at((x, y))
+			r.set_at((x, y), (this[0], 255 - this[1], this[2]))
+	return r
+
+def negate_blue(i: pygame.Surface):
+	r = i.copy()
+	for x in range(r.get_width()):
+		for y in range(r.get_height()):
+			this = r.get_at((x, y))
+			r.set_at((x, y), (this[0], this[1], 255 - this[2]))
+	return r
+
 print()
 img = pygame.image.load(inputfilename)
 after = img.copy()
-transforms = [chop, flip, rotate, roll, negate, addborder]
-for f in range(len(transforms) * 2):
+transforms = [chop, flip, rotate, roll, negate, addborder, addline, addcopy, negate_red, negate_green, negate_blue]
+for f in range(len(transforms)):
 	after = random.choice(transforms)(after)
 	# Progress bar
-	print(u"\u001b[1A\r\u001b[0K" + str(f + 1) + "/" + str(len(transforms) * 2))
+	print(u"\u001b[1A\r\u001b[0K" + str(f + 1) + "/" + str(len(transforms)))
 
-subprocess.run(["python3", "imageviewer.py", inputfilename])
 pygame.image.save(after, outputfilename)
+subprocess.Popen(["python3", "imageviewer.py", inputfilename])
 subprocess.run(["python3", "imageviewer.py", outputfilename])

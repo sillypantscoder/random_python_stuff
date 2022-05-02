@@ -1,26 +1,25 @@
-def aspect_scale(pygame, img, bx, by):
+def aspect_scale(img, box_width, box_height):
 	""" Scales 'img' to fit into box bx/by.
 	 This method will retain the original image's aspect ratio """
-	ix,iy = img.get_size()
-	if ix > iy:
+	image_width, image_height = img.get_size()
+	if image_width > image_height:
 		# fit to width
-		scale_factor = bx/float(ix)
-		sy = scale_factor * iy
-		if sy > by:
-			scale_factor = by/float(iy)
-			sx = scale_factor * ix
-			sy = by
+		scale_factor = box_width/float(image_width)
+		scaled_height = scale_factor * image_height
+		if scaled_height > box_height:
+			scale_factor = box_height/float(image_height)
+			scaled_width = scale_factor * image_width
+			scaled_height = box_height
 		else:
-			sx = bx
+			scaled_width = box_width
 	else:
 		# fit to height
-		scale_factor = by/float(iy)
-		sx = scale_factor * ix
-		if sx > bx:
-			scale_factor = bx/float(ix)
-			sx = bx
-			sy = scale_factor * iy
+		scale_factor = box_height/float(image_height)
+		scaled_width = scale_factor * image_width
+		if scaled_width > box_width:
+			scale_factor = box_width/float(image_width)
+			scaled_width = box_width
+			scaled_height = scale_factor * image_height
 		else:
-			sy = by
-
-	return pygame.transform.scale(img, (sx,sy))
+			scaled_height = box_height
+	return (scaled_width, scaled_height)

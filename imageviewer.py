@@ -27,6 +27,9 @@ while running:
 			screensize = [*event.size]
 			screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
 	screen.fill((0, 0, 0))
-	screen.blit(aspect_scale(pygame, img, *screensize), (0, 0))
+	imgsize = aspect_scale(img, *screensize)
+	paddingX = (screensize[0] - imgsize[0]) // 2
+	paddingY = (screensize[1] - imgsize[1]) // 2
+	screen.blit(pygame.transform.scale(img, imgsize), (paddingX, paddingY))
 	pygame.display.flip()
 	c.tick(60)
