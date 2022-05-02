@@ -1,3 +1,5 @@
+#full
+
 import pygame
 import pygame.camera
 import subprocess

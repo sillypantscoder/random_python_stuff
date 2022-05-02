@@ -1,4 +1,4 @@
-# Pygame platformer
+#full
 
 #import subprocess
 #from types import prepare_class

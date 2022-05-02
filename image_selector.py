@@ -1,3 +1,5 @@
+#full
+
 import pygame
 import os
 import subprocess

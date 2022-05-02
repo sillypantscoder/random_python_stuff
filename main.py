@@ -5,6 +5,14 @@ import os
 ui.pygame.font.init()
 ui.init(ui.pygame.display.set_mode((500, 500)), ui.pygame.font.SysFont(ui.pygame.font.get_default_font(), 30))
 
-files = [z for z in os.listdir() if z.endswith(".py")]
+def isfull(path):
+	if not path.endswith(".py"): return False
+	f = open(path, "r")
+	r = f.readline()
+	f.close()
+	if r == "#full\n": return True
+	else: return False
+
+files = [z for z in os.listdir() if isfull(z)]
 s = files[ui.menu("Select Python Project", files)]
 subprocess.run(["python3", s])
