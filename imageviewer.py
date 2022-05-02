@@ -1,3 +1,5 @@
+#takes
+
 import pygame
 import sys
 from aspectscale import aspect_scale

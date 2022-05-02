@@ -15,4 +15,4 @@ screen = pygame.display.set_mode((500, 500))
 ui.init(screen, font)
 
 selectedImage = ui.menu("Select Image File", imgs)
-subprocess.run(["python3", "weirdimage.py", imgs[selectedImage]])
+subprocess.run(["python3", "imgopen.py", imgs[selectedImage]])

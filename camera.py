@@ -22,7 +22,7 @@ while running:
 			running = False
 		elif event.type == pygame.MOUSEBUTTONDOWN:
 			pygame.image.save(camimg, "camera_image.png")
-			subprocess.run(["python3", "weirdimage.py", "camera_image.png"])
+			subprocess.run(["python3", "imgopen.py", "camera_image.png"])
 	if cam.query_image(): camimg = cam.get_image()
 	screen.fill((255, 255, 255))
 	screen.blit(camimg, (0, 0))
