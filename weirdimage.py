@@ -4,9 +4,7 @@ import pygame
 import random
 import subprocess
 import sys
-
-inputfilename = sys.argv[1]
-outputfilename = "weird.png"
+import math
 
 def chop(i: pygame.Surface):
 	r = i.get_rect()
@@ -60,39 +58,43 @@ def addcopy(i: pygame.Surface):
 	r.blit(cropped, (random.randint(0, r.get_width() // 2), random.randint(0, r.get_height() // 2)))
 	return r
 
-def negate_red(i: pygame.Surface):
+def negate_random(i: pygame.Surface):
+	ind = [random.choice([False, False, True]), random.choice([False, False, True]), random.choice([False, False, True])]
 	r = i.copy()
 	for x in range(r.get_width()):
 		for y in range(r.get_height()):
-			this = r.get_at((x, y))
-			r.set_at((x, y), (255 - this[0], this[1], this[2]))
+			this = [*r.get_at((x, y))]
+			this[0] = 255 - this[0] if ind[0] else this[0]
+			this[1] = 255 - this[1] if ind[1] else this[1]
+			this[2] = 255 - this[2] if ind[2] else this[2]
+			r.set_at((x, y), this)
 	return r
 
-def negate_green(i: pygame.Surface):
+def shift(i: pygame.Surface):
 	r = i.copy()
-	for x in range(r.get_width()):
-		for y in range(r.get_height()):
-			this = r.get_at((x, y))
-			r.set_at((x, y), (this[0], 255 - this[1], this[2]))
+	for x in range(20, r.get_width() - 20):
+		for y in range(20, r.get_height() - 20):
+			this = i.get_at((x, y))
+			w = r.get_width()
+			z = (w / 2) ** 2
+			shiftby = z - math.pow(x - math.sqrt(z), 2)
+			endpos = [x, y - round(shiftby / 5000)]
+			endpos[0] += random.choice([-1, 0, 0, 1])
+			endpos[1] += random.choice([-1, 0, 0, 1])
+			r.set_at(endpos, (this[0], this[1], this[2]))
 	return r
 
-def negate_blue(i: pygame.Surface):
-	r = i.copy()
-	for x in range(r.get_width()):
-		for y in range(r.get_height()):
-			this = r.get_at((x, y))
-			r.set_at((x, y), (this[0], this[1], 255 - this[2]))
-	return r
-
-print()
-img = pygame.image.load(inputfilename)
-after = img.copy()
-transforms = [chop, flip, rotate, roll, negate, addborder, addline, addcopy, negate_red, negate_green, negate_blue]
-for f in range(len(transforms)):
-	after = random.choice(transforms)(after)
-	# Progress bar
-	print(u"\u001b[1A\r\u001b[0K" + str(f + 1) + "/" + str(len(transforms)))
-
-pygame.image.save(after, outputfilename)
-#subprocess.Popen(["python3", "imageviewer.py", inputfilename])
-#subprocess.run(["python3", "imageviewer.py", outputfilename])
+if __name__ == "__main__":
+	inputfilename = sys.argv[1]
+	outputfilename = "weird.png"
+	print()
+	img = pygame.image.load(inputfilename)
+	after = img.copy()
+	transforms = [chop, flip, rotate, roll, negate, addborder, addline, addcopy, negate_random, shift]
+	for f in range(len(transforms)):
+		after = random.choice(transforms)(after)
+		# Progress bar
+		print(u"\u001b[1A\r\u001b[0K" + str(f + 1) + "/" + str(len(transforms)))
+	pygame.image.save(after, outputfilename)
+	#subprocess.Popen(["python3", "imageviewer.py", inputfilename])
+	#subprocess.run(["python3", "imageviewer.py", outputfilename])
