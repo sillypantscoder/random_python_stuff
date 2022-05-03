@@ -94,5 +94,5 @@ for f in range(len(transforms)):
 	print(u"\u001b[1A\r\u001b[0K" + str(f + 1) + "/" + str(len(transforms)))
 
 pygame.image.save(after, outputfilename)
-subprocess.Popen(["python3", "imageviewer.py", inputfilename])
-subprocess.run(["python3", "imageviewer.py", outputfilename])
+#subprocess.Popen(["python3", "imageviewer.py", inputfilename])
+#subprocess.run(["python3", "imageviewer.py", outputfilename])
