@@ -84,13 +84,18 @@ def shift(i: pygame.Surface):
 			r.set_at(endpos, (this[0], this[1], this[2]))
 	return r
 
+def edges(i: pygame.Surface):
+	e = pygame.transform.laplacian(i)
+	return e
+
+transforms = [chop, flip, rotate, roll, negate, addborder, addline, addcopy, negate_random, shift, edges]
+
 if __name__ == "__main__":
 	inputfilename = sys.argv[1]
 	outputfilename = "weird.png"
 	print()
 	img = pygame.image.load(inputfilename)
 	after = img.copy()
-	transforms = [chop, flip, rotate, roll, negate, addborder, addline, addcopy, negate_random, shift]
 	for f in range(len(transforms)):
 		after = random.choice(transforms)(after)
 		# Progress bar
