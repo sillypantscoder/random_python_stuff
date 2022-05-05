@@ -7,12 +7,13 @@ import random
 from weirdimage import transforms
 import threading
 import ui
+from aspectscale import aspect_scale
 
 pygame.camera.init()
 
 camlist = pygame.camera.list_cameras()
 if not camlist: exit("No cameras detected")
-cam = pygame.camera.Camera(camlist[0],(640,480))
+cam = pygame.camera.Camera(camlist[0], (640, 480))
 cam.start()
 camimg = pygame.Surface((0, 0))
 filterimg = pygame.Surface((0, 0))
@@ -59,10 +60,16 @@ while running:
 	while cam.query_image():
 		camimg = cam.get_image()
 	if threading.active_count() < 2: threading.Thread(target=filterasync, name="filter").start()
-	try:
-		screen.fill((255, 255, 255))
-		screen.blit(camimg, (0, 0))
-		screen.blit(filterimg, (screensize[0] - filterimg.get_width(), 0))
-	except: pass
+	err = True
+	while err:
+		try:
+			screen.fill((255, 255, 255))
+			imgsize = aspect_scale(camimg, screensize[0] / 2, screensize[1])
+			screen.blit(pygame.transform.scale(camimg, imgsize), (0, 0))
+			imgsize = aspect_scale(filterimg, screensize[0] / 2, screensize[1])
+			imgsize = pygame.transform.scale(filterimg, imgsize)
+			screen.blit(imgsize, (screensize[0] - imgsize.get_width(), 0))
+			err = False
+		except: err = True
 	pygame.display.flip()
 	c.tick(60)

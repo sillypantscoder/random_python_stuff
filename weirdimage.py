@@ -77,10 +77,6 @@ def shift(i: pygame.Surface) -> pygame.Surface:
 			r.set_at(endpos, (this[0], this[1], this[2]))
 	return r
 
-def edges(i: pygame.Surface) -> pygame.Surface:
-	e = pygame.transform.laplacian(i)
-	return e
-
 def contrast(i: pygame.Surface) -> pygame.Surface:
 	r = i.copy()
 	for x in range(r.get_width()):
@@ -124,7 +120,7 @@ def swirl(i: pygame.Surface) -> pygame.Surface:
 				img.set_at((orig_col, orig_row), i.get_at((dest_col, dest_row)))
 	return img
 
-transforms = [chop, flip, rotate, roll, negate, addborder, addline, negate_random, shift, edges, contrast, mist, swirl]
+transforms = [chop, flip, rotate, roll, negate, addborder, addline, negate_random, shift, contrast, mist, swirl]
 
 if __name__ == "__main__":
 	inputfilename = sys.argv[1]
