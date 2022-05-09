@@ -25,7 +25,7 @@ while running:
 			running = False
 		elif event.type == pygame.VIDEORESIZE:
 			screensize = [*event.size]
-			screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
+			#screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
 	screen.fill((0, 0, 0))
 	imgsize = aspect_scale(img, *screensize)
 	paddingX = (screensize[0] - imgsize[0]) // 2

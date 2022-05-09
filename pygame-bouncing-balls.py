@@ -39,8 +39,8 @@ while running:
 		elif event.type == pygame.MOUSEBUTTONUP:
 			for i in range(50):
 				newBall()
-		elif event.type == pygame.VIDEORESIZE:
-			screen = pygame.display.set_mode(event.dict["size"], pygame.RESIZABLE)
+		#elif event.type == pygame.VIDEORESIZE:
+			#screen = pygame.display.set_mode(event.dict["size"], pygame.RESIZABLE)
 	pos = pygame.mouse.get_pos()
 	# BALLS
 	for b in balls:

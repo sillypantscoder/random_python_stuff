@@ -54,7 +54,8 @@ while running:
 			subprocess.Popen(["python3", "imgopen.py", "camera_image.png"])
 		elif event.type == pygame.VIDEORESIZE:
 			screensize = [*event.size]
-			screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
+			#screen = pygame.display.set_mode(screensize, pygame.RESIZABLE)
+			# I sure hope you have Pygame 2.0
 	# Get images
 	c = pygame.time.Clock()
 	while cam.query_image():
