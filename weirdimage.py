@@ -77,12 +77,13 @@ def shift(i: pygame.Surface) -> pygame.Surface:
 			r.set_at(endpos, (this[0], this[1], this[2]))
 	return r
 
-def contrast(i: pygame.Surface) -> pygame.Surface:
+def highlight(i: pygame.Surface) -> pygame.Surface:
 	r = i.copy()
 	for x in range(r.get_width()):
 		for y in range(r.get_height()):
 			this = r.get_at((x, y))
-			f = random.choice([lambda x: x // 2, lambda x: x * 2])
+			if (this[0] + this[1] + this[2]) / 3 > 128: f = lambda x: x // 2
+			else: f = lambda x: x * 2
 			cf = lambda x: min(255, max(0, f(x)))
 			this = [cf(this[0]), cf(this[1]), cf(this[2])]
 			r.set_at((x, y), this)
@@ -120,7 +121,46 @@ def swirl(i: pygame.Surface) -> pygame.Surface:
 				img.set_at((orig_col, orig_row), i.get_at((dest_col, dest_row)))
 	return img
 
-transforms = [chop, flip, rotate, roll, negate, addborder, addline, negate_random, shift, contrast, mist, swirl]
+def amplify(i: pygame.Surface) -> pygame.Surface:
+	r = i.copy()
+	for x in range(i.get_width()):
+		for y in range(i.get_height()):
+			pixel = i.get_at((x, y))
+			if pixel[0] < 127: pixel[0] = 127 - pixel[0]
+			if pixel[1] < 127: pixel[1] = 127 - pixel[1]
+			if pixel[2] < 127: pixel[2] = 127 - pixel[2]
+			r.set_at((x, y), pixel)
+	return r
+
+def pixel_lines(i: pygame.Surface) -> pygame.Surface:
+	scale = random.randint(4, 10)
+	r = pygame.transform.scale(i, (i.get_width() // scale, i.get_height() // scale))
+	currentPixel = [random.randint(0, r.get_width() - 1), random.randint(0, r.get_height() - 1)]
+	lastPixel = r.get_at(currentPixel)
+	for x in range(50):
+		if random.random() < 0.5:
+			# Horizontal
+			add = random.randint(0, r.get_width())
+			for y in range(abs(add)):
+				currentPixel[0] += add // abs(add)
+				currentPixel[0] %= r.get_width()
+				currentPixel[1] %= r.get_height()
+				#prev = r.get_at(currentPixel)
+				r.set_at(currentPixel, lastPixel)
+				#lastPixel = prev
+		else:
+			# Vertical
+			add = random.randint(0, r.get_width())
+			for y in range(abs(add)):
+				currentPixel[1] += add // abs(add)
+				currentPixel[0] %= r.get_width()
+				currentPixel[1] %= r.get_height()
+				#prev = r.get_at(currentPixel)
+				r.set_at(currentPixel, lastPixel)
+				#lastPixel = prev
+	return pygame.transform.scale(r, (i.get_width(), i.get_height()))
+
+transforms = [chop, flip, rotate, roll, negate, addborder, addline, negate_random, shift, highlight, mist, swirl, amplify, pixel_lines]
 
 if __name__ == "__main__":
 	inputfilename = sys.argv[1]
@@ -128,7 +168,7 @@ if __name__ == "__main__":
 	print()
 	img = pygame.image.load(inputfilename)
 	after = img.copy()
-	for f in range(len(transforms)):
+	for f in range(10):
 		after = random.choice(transforms)(after)
 		# Progress bar
 		print(u"\u001b[1A\r\u001b[0K" + str(f + 1) + "/" + str(len(transforms)))
