@@ -70,10 +70,11 @@ def getGameFolders(path):
 	ret = []
 	try:
 		for x in os.listdir(path):
-			if isGameFolder(os.path.join(path, x)):
-				ret.append(x)
-			elif os.path.isdir(os.path.join(path, x)):
-				ret += getGameFolders(os.path.join(path, x))
+			p = os.path.join(path, x)
+			if isGameFolder(p):
+				ret.append(p)
+			elif os.path.isdir(p):
+				ret += getGameFolders(p)
 	except: pass
 	return ret
 
@@ -83,10 +84,11 @@ cursorpos = 0
 while True:
 	# Writing the games to the screen
 	for i in range(len(list_of_games)):
+		r = list_of_games[i].split("/")[-1]
 		if i == cursorpos:
-			print(u"-> \u001b[7m" + list_of_games[i] + u"\u001b[0m")
+			print(u"-> \u001b[7m" + r + u"\u001b[0m")
 		else:
-			print("- " + list_of_games[i])
+			print("- " + r)
 	# Getting the input
 	i = getch()
 	if i == "\x1b": # Escape sequence

@@ -74,7 +74,7 @@ class Button(UIElement):
 		self.clickevents = []
 	def render(self, mouse):
 		retext = settings["font"].render(self.text, True, (BLACK if mouse else WHITE))
-		r = pygame.Surface((500, retext.get_height() + 20))
+		r = pygame.Surface((500, retext.get_height() + 30))
 		r.fill(WHITE)
 		pygame.draw.rect(r, BLACK, (50, 10, 400, retext.get_height() + 10), 1 if mouse else 0)
 		r.blit(retext, (((500) // 2) - (retext.get_width() // 2), 15))
@@ -105,8 +105,7 @@ class UI:
 		self.items.append(item)
 		return self
 	def render(self, mousepos, mouseclicked):
-		scrn_height = 560
-		scrn_width = 500
+		scrn_width, scrn_height = settings["screen"].get_size()
 		rendered_items = []
 		cum_y = 0
 		for item in self.items:
@@ -160,12 +159,14 @@ def listmenu(getitemcallback: "typing.Callable[[function], list[UIElement]]"):
 	for item in getitemcallback(finish):
 		ui.add(item)
 		index += 1
+	c = pygame.time.Clock()
 	while not finished[0]:
 		render_ui(ui)
+		c.tick(60)
 	return finished[1]
 
 def uimenu(ui: UI):
-	"""Displays an already-created UI, with options for each element to return a specific value."""
+	"""Displays an already-created UI object, with click handlers."""
 	def getitemcallback(finish):
 		u: list[UIElement] = [i for i in ui.items] # Create the UI element list
 		getclickerfunc = lambda i: (lambda: finish(i))

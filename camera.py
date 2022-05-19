@@ -50,7 +50,10 @@ while running:
 		if event.type == pygame.QUIT:
 			running = False
 		elif event.type == pygame.MOUSEBUTTONDOWN:
-			pygame.image.save(filterimg, "camera_image.png")
+			if ui.uimenu(ui.UI().add(ui.Header("Select Image")).add(ui.Button("Camera Image")).add(ui.Button("Filtered Image"))) == 1:
+				pygame.image.save(camimg, "camera_image.png")
+			else:
+				pygame.image.save(filterimg, "camera_image.png")
 			subprocess.Popen(["python3", "imgopen.py", "camera_image.png"])
 		elif event.type == pygame.VIDEORESIZE:
 			screensize = [*event.size]
