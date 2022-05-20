@@ -5,7 +5,7 @@ def hash(state0: int, state1: int) -> int:
 	s1 ^= (s1 << 23) & MASK
 	s1 ^= (s1 >> 17) & MASK
 	s1 ^= s0 & MASK
-	s1 ^= (s0 >> 26) & MASK 
+	s1 ^= (s0 >> 26) & MASK
 	state1 = s1 & MASK
 	return state1
 
@@ -52,6 +52,9 @@ class Random:
 		return a + self.getRandomBits(b - a).count(True)
 	def choice(self, seq: list) -> int:
 		return seq[self.randint(0, len(seq) - 1)]
+	def random(self) -> float:
+		return self.randint(0, 100000) / 100000
+		# precision of 1/100000
 
 random = Random()
 
