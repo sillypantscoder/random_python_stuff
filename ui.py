@@ -97,6 +97,14 @@ class Spacer(UIElement):
 		return r
 	def __repr__(self): return f"UIElement (Spacer)"
 
+class Image(UIElement):
+	"""A UI element that displays an image."""
+	def __init__(self, image: pygame.Surface):
+		self.image = image
+	def render(self, mouse):
+		return self.image
+	def __repr__(self): return f"UIElement (Image {self.image.get_width()}x{self.image.get_height()})"
+
 class UI:
 	"""A UI to be drawn to the screen. Contains a list of UIElements."""
 	def __init__(self):
