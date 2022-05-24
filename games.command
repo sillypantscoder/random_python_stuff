@@ -47,6 +47,7 @@ import os
 import subprocess
 import atexit
 import time
+import threading
 
 def isGameFolder(path):
 	try:
@@ -69,16 +70,14 @@ def isGameFolder(path):
 		return False
 
 def getGameFolders(path):
-	ret = []
 	try:
 		for x in os.listdir(path):
 			p = os.path.join(path, x)
 			if isGameFolder(p):
-				ret.append(p)
+				list_of_games.append(p)
 			elif os.path.isdir(p):
-				ret += getGameFolders(p)
+				getGameFolders(p)
 	except: pass
-	return ret
 
 def cleanup():
 	print(u"\u001b[7mKilling subprocesses...\u001b[0m")
@@ -100,10 +99,12 @@ def isalive(p: str) -> bool:
 		return False
 
 print(u"\u001b[2J===== GAMES =====")
-list_of_games = getGameFolders(os.path.expanduser("~/Documents"))
+list_of_games = []
+threading.Thread(target=getGameFolders, args=[os.path.expanduser("~/Documents")], name="getGameFolders").start()
 all_processes: "list[subprocess.Popen]" = []
 process_names: "list[str]" = []
 cursorpos = 0
+time.sleep(1)
 while True:
 	# Writing the games to the screen
 	for i in range(len(list_of_games)):
@@ -128,6 +129,7 @@ while True:
 			cursorpos = min(len(list_of_games) - 1, cursorpos + 1)
 	elif i == "\r": # Enter key
 		c = os.path.join(os.path.expanduser("~/Documents"), list_of_games[cursorpos])
+		subprocess.run(["git", "pull"], cwd=c, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 		all_processes.append(
 			subprocess.Popen(["python3", "main.py"], cwd=c, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		)
