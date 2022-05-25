@@ -100,7 +100,7 @@ class Spacer(UIElement):
 class Image(UIElement):
 	"""A UI element that displays an image."""
 	def __init__(self, image: pygame.Surface):
-		self.image = image
+		self.image = image.copy()
 	def render(self, mouse):
 		return self.image
 	def __repr__(self): return f"UIElement (Image {self.image.get_width()}x{self.image.get_height()})"
@@ -148,7 +148,7 @@ def render_ui(ui: UI):
 	settings["screen"].blit(ui.render(m, clicked), (0, 0))
 	pygame.display.flip()
 
-def menu(header: str, items: "list[str]"):
+def menu(header: str, items: "list[str]") -> int:
 	"""Displays a menu with the given header and items. Returns the index of the selected item."""
 	ui = UI().add(Header(header))
 	for i in items:
@@ -156,24 +156,22 @@ def menu(header: str, items: "list[str]"):
 		else: ui.add(Option(i))
 	return uimenu(ui) - 1
 
-def listmenu(getitemcallback: "typing.Callable[[function], list[UIElement]]"):
+def listmenu(getitemcallback: "typing.Callable[[function], list[UIElement]]") -> typing.Any:
 	"""Displays a UI, with options for each element to return a specific value."""
 	ui = UI() # Create the UI
 	finished = [False, None] # 1st item stops the mainloop, 2nd item stores the selected item
 	def finish(v):
 		finished[0] = True
 		finished[1] = v
-	index = 0
 	for item in getitemcallback(finish):
 		ui.add(item)
-		index += 1
 	c = pygame.time.Clock()
 	while not finished[0]:
 		render_ui(ui)
 		c.tick(60)
 	return finished[1]
 
-def uimenu(ui: UI):
+def uimenu(ui: UI) -> int:
 	"""Displays an already-created UI object, with click handlers."""
 	def getitemcallback(finish):
 		u: list[UIElement] = [i for i in ui.items] # Create the UI element list
