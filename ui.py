@@ -16,7 +16,7 @@ BLACK = (0, 0, 0)
 class UIElement:
 	"""Base class for an element in a UI. Renders as a 1x1 black pixel."""
 	def __init__(self): pass
-	def render(self, mouse):
+	def render(self, mouse, width):
 		r = pygame.Surface((1, 1))
 		r.fill(BLACK)
 		return r
@@ -28,9 +28,9 @@ class Header(UIElement):
 	"""A header for a UI. Renders as a white text against a black background."""
 	def __init__(self, text):
 		self.text = text
-	def render(self, mouse):
+	def render(self, mouse, width):
 		retext = settings["font"].render(self.text, True, WHITE)
-		r = pygame.Surface((500, retext.get_height()))
+		r = pygame.Surface((width, retext.get_height()))
 		r.fill(BLACK)
 		r.blit(retext, (0, 0))
 		return r
@@ -40,9 +40,9 @@ class Text(UIElement):
 	"""A text element. Renders as a white text against a black background. Cannot be clicked."""
 	def __init__(self, text):
 		self.text = text
-	def render(self, mouse):
+	def render(self, mouse, width):
 		retext = settings["font"].render(self.text, True, BLACK)
-		r = pygame.Surface((500, retext.get_height()))
+		r = pygame.Surface((width, retext.get_height()))
 		r.fill(WHITE)
 		r.blit(retext, (0, 0))
 		return r
@@ -53,9 +53,9 @@ class Option(UIElement):
 	def __init__(self, text):
 		self.text = text
 		self.clickevents = []
-	def render(self, mouse):
+	def render(self, mouse, width):
 		retext = settings["font"].render(self.text, True, (WHITE if mouse else BLACK))
-		r = pygame.Surface((500, retext.get_height()))
+		r = pygame.Surface((width, retext.get_height()))
 		r.fill((BLACK if mouse else WHITE))
 		r.blit(retext, (0, 0))
 		return r
@@ -72,12 +72,12 @@ class Button(UIElement):
 	def __init__(self, text):
 		self.text = text
 		self.clickevents = []
-	def render(self, mouse):
+	def render(self, mouse, width):
 		retext = settings["font"].render(self.text, True, (BLACK if mouse else WHITE))
-		r = pygame.Surface((500, retext.get_height() + 30))
+		r = pygame.Surface((width, retext.get_height() + 30))
 		r.fill(WHITE)
-		pygame.draw.rect(r, BLACK, (50, 10, 400, retext.get_height() + 10), 1 if mouse else 0)
-		r.blit(retext, (((500) // 2) - (retext.get_width() // 2), 15))
+		pygame.draw.rect(r, BLACK, pygame.Rect(50, 10, width - 100, retext.get_height() + 10), 1 if mouse else 0)
+		r.blit(retext, ((width // 2) - (retext.get_width() // 2), 15))
 		return r
 	def addclick(self, handler):
 		self.clickevents.append(handler)
@@ -91,8 +91,8 @@ class Spacer(UIElement):
 	"""A spacer. Renders as a white bar."""
 	def __init__(self, height):
 		self.height = height
-	def render(self, mouse):
-		r = pygame.Surface((500, self.height))
+	def render(self, mouse, width):
+		r = pygame.Surface((width, self.height))
 		r.fill(WHITE)
 		return r
 	def __repr__(self): return f"UIElement (Spacer)"
@@ -101,7 +101,7 @@ class Image(UIElement):
 	"""A UI element that displays an image."""
 	def __init__(self, image: pygame.Surface):
 		self.image = image.copy()
-	def render(self, mouse):
+	def render(self, mouse, width):
 		return self.image
 	def __repr__(self): return f"UIElement (Image {self.image.get_width()}x{self.image.get_height()})"
 
@@ -112,14 +112,18 @@ class UI:
 	def add(self, item: UIElement):
 		self.items.append(item)
 		return self
+	def addMultiple(self, items: typing.List[UIElement]):
+		for item in items:
+			self.add(item)
+		return self
 	def render(self, mousepos, mouseclicked):
 		scrn_width, scrn_height = settings["screen"].get_size()
 		rendered_items = []
 		cum_y = 0
 		for item in self.items:
-			i = item.render(False)
+			i = item.render(False, scrn_width)
 			if i.get_rect().move(0, cum_y).collidepoint(mousepos):
-				i = item.render(True)
+				i = item.render(True, scrn_width)
 				if mouseclicked:
 					item.handleclick()
 			rendered_items.append(i)
@@ -144,6 +148,8 @@ def render_ui(ui: UI):
 			# User clicked close button
 		if event.type == pygame.MOUSEBUTTONUP:
 			clicked = True
+		if event.type == pygame.VIDEORESIZE:
+			settings["screen"] = pygame.display.set_mode(event.dict['size'], pygame.RESIZABLE)
 	m = pygame.mouse.get_pos()
 	settings["screen"].blit(ui.render(m, clicked), (0, 0))
 	pygame.display.flip()
