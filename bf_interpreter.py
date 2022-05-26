@@ -1,6 +1,7 @@
 from getch import getch
 import random
 from sys import stdout, argv
+from os import environ
 
 input_string = "".join([random.choice("+-<>.,[]") for x in range(100)])
 if len(argv) > 1:
@@ -9,6 +10,7 @@ if len(argv) > 1:
 tape = [0]
 pointerIndex = 0
 inputAllowed = True
+outputLimit = 5000
 
 def moveLeft():
 	global pointerIndex
@@ -33,11 +35,15 @@ def decrement():
 def inputChar():
 	global tape
 	global inputAllowed
-	print(" [input]", end="")
-	if inputAllowed: g = getch()
+	if inputAllowed:
+		print(" [input]", end="")
+		if environ.get("AUTOINPUT") == "1":
+			try: g = input_string[pointerIndex]
+			except: g = "!"
+		else: g = getch()
+		print(u"\u001b[8D\u001b[0K", end="") # clear line
+		stdout.flush()
 	else: g = "\x04"
-	print(u"\u001b[8D\u001b[0K", end="") # clear line
-	stdout.flush()
 	if g == "\x1b": # Escape sequence
 		tape[pointerIndex] = 0
 	if g == "\x04": # Ctrl+D
@@ -47,7 +53,15 @@ def inputChar():
 		tape[pointerIndex] = ord(g)
 def outputChar():
 	global tape
-	print(chr(tape[pointerIndex]), end="")
+	global outputLimit
+	if outputLimit <= 0:
+		print("[!] Output limit reached")
+		exit()
+	c = chr(tape[pointerIndex])
+	if c == u'\u001b':
+		c = "ESC"
+	print(c, end="")
+	outputLimit -= 1
 	stdout.flush()
 
 def interpretSection(s: str):
@@ -65,7 +79,6 @@ def interpretSection(s: str):
 			moveLeft()
 		elif char == ".":
 			outputChar()
-			iters += 50
 		elif char == ",":
 			inputChar()
 			iters += 100
@@ -93,13 +106,17 @@ def interpretSection(s: str):
 					elif s[i] == "[":
 						layers -= 1
 		# VISUALIZATION
-		#print("<", "|".join([(f"[{tape[x]}]" if x == pointerIndex else f" {tape[x]} ") for x in range(len(tape))]), ">")
+		#print("<" + "|".join([(f"[{tape[x]}]" if x == pointerIndex else f" {tape[x]} ") for x in range(len(tape))]) + ">")
 		i += 1
 		iters += 1
 		if iters > 10000000:
 			print("[!] Infinite Loop... keep going? [y/N]", end="")
-			g = getch()
-			print(u"\u001b[38D\u001b[0K", end="") # clear line
+			if environ.get("AUTOINPUT") == "1":
+				g = "n"
+				print(u"\u001b[21D\u001b[0K", end="")
+			else:
+				g = getch()
+				print(u"\u001b[38D\u001b[0K", end="") # clear line
 			stdout.flush()
 			if g != "y": return
 			iters = 0
