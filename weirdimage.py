@@ -7,13 +7,16 @@ import sys
 import math
 
 def chop(i: pygame.Surface) -> pygame.Surface:
+	"""Chops out a section of the image"""
 	r = i.get_rect()
 	return pygame.transform.chop(i, pygame.Rect(random.randint(0, r.right // 2), random.randint(0, r.bottom // 2), random.randint(0, r.right // 2), random.randint(0, r.bottom // 2)))
 
 def flip(i: pygame.Surface) -> pygame.Surface:
+	"""Flips the image horizontally and vertically"""
 	return pygame.transform.flip(i, True, True)
 
 def rotate(i: pygame.Surface) -> pygame.Surface:
+	"""Rotates the image"""
 	b = i.copy()
 	b.set_at((0, 0), (0, 0, 0))
 	r = pygame.transform.rotate(b, random.randint(0, 360))
@@ -23,6 +26,7 @@ def rotate(i: pygame.Surface) -> pygame.Surface:
 	return b
 
 def roll(i: pygame.Surface) -> pygame.Surface:
+	"""Rolls the image by a random amount"""
 	r = pygame.Surface(i.get_size())
 	offset = (random.randint(0, i.get_width() // 2), random.randint(0, i.get_height() // 2))
 	r.blit(i, offset)
@@ -32,12 +36,14 @@ def roll(i: pygame.Surface) -> pygame.Surface:
 	return r.copy()
 
 def negate(i: pygame.Surface) -> pygame.Surface:
+	"""Negates the image"""
 	r = pygame.Surface(i.get_size())
 	r.fill((255, 255, 255))
 	r.blit(i, (0, 0), special_flags=pygame.BLEND_SUB)
 	return r
 
 def addborder(i: pygame.Surface) -> pygame.Surface:
+	"""Adds a randomly colored, randomly sized border to the image"""
 	s = random.randint(2, 20)
 	r = pygame.Surface((i.get_width() + s + s, i.get_height() + s + s))
 	r.fill((random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
@@ -45,6 +51,7 @@ def addborder(i: pygame.Surface) -> pygame.Surface:
 	return r
 
 def addline(i: pygame.Surface) -> pygame.Surface:
+	"""Adds a line to the image"""
 	r = i.copy()
 	frompos = (random.randint(0, r.get_width()), random.randint(0, r.get_height()))
 	topos = (random.randint(0, r.get_width()), random.randint(0, r.get_height()))
@@ -52,6 +59,7 @@ def addline(i: pygame.Surface) -> pygame.Surface:
 	return r
 
 def negate_random(i: pygame.Surface) -> pygame.Surface:
+	"""Randomly negates the red, green, or blue channel of the image"""
 	ind = [random.choice([False, False, True]), random.choice([False, False, True]), random.choice([False, False, True])]
 	r = i.copy()
 	for x in range(r.get_width()):
@@ -64,6 +72,7 @@ def negate_random(i: pygame.Surface) -> pygame.Surface:
 	return r
 
 def shift(i: pygame.Surface) -> pygame.Surface:
+	"""Moves some pixels up"""
 	r = i.copy()
 	for x in range(20, r.get_width() - 20):
 		for y in range(20, r.get_height() - 20):
@@ -78,6 +87,7 @@ def shift(i: pygame.Surface) -> pygame.Surface:
 	return r
 
 def highlight(i: pygame.Surface) -> pygame.Surface:
+	"""Takes light areas of the image and darkens them"""
 	r = i.copy()
 	for x in range(r.get_width()):
 		for y in range(r.get_height()):
@@ -90,6 +100,7 @@ def highlight(i: pygame.Surface) -> pygame.Surface:
 	return r
 
 def mist(i: pygame.Surface) -> pygame.Surface:
+	"""Adds mist to the image"""
 	r = i.copy()
 	for x in range(r.get_width()):
 		for y in range(r.get_height()):
@@ -99,6 +110,7 @@ def mist(i: pygame.Surface) -> pygame.Surface:
 	return r
 
 def swirl(i: pygame.Surface) -> pygame.Surface:
+	"""Swirls the image :)"""
 	img = i.copy()
 	col0 = 0.5 * (float(img.get_width())  - 1.0)
 	row0 = 0.5 * (float(img.get_height()) - 1.0)
@@ -122,6 +134,7 @@ def swirl(i: pygame.Surface) -> pygame.Surface:
 	return img
 
 def amplify(i: pygame.Surface) -> pygame.Surface:
+	"""Takes dark areas of the image and makes them brighter"""
 	r = i.copy()
 	for x in range(i.get_width()):
 		for y in range(i.get_height()):
@@ -133,6 +146,7 @@ def amplify(i: pygame.Surface) -> pygame.Surface:
 	return r
 
 def pixel_lines(i: pygame.Surface) -> pygame.Surface:
+	"""Pixelates the image, then draws lines"""
 	scale = random.randint(4, 10)
 	r = pygame.transform.scale(i, (i.get_width() // scale, i.get_height() // scale))
 	currentPixel = [random.randint(0, r.get_width() - 1), random.randint(0, r.get_height() - 1)]

@@ -11,6 +11,10 @@ def init(screen, font):
 		"font": font
 	}
 
+def autoinit():
+	pygame.font.init()
+	init(pygame.display.set_mode([500, 500], pygame.RESIZABLE), pygame.font.SysFont(pygame.font.get_default_font(), 30))
+
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
@@ -115,7 +119,7 @@ class Image(UIElement):
 
 class KeyboardInput(FocasableUIElement):
 	"""A UI element that displays a text box and allows the user to enter text."""
-	def __init__(self, text: str, allowedChars: str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"):
+	def __init__(self, text: str, allowedChars: str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_!@#$%^&*()-=+[]{}\\|;:'\",.<>/?`~ "):
 		super().__init__()
 		self.text = text
 		self.allowedChars = allowedChars
@@ -140,6 +144,8 @@ class Dropdown(FocasableUIElement):
 		super().__init__()
 		self.options = options
 		self.selected = 0
+	def getSelected(self):
+		return self.options[self.selected]
 	def render_all_options(self, width) -> "list[pygame.Surface]":
 		optionlist = []
 		for item in range(len(self.options)):
@@ -157,7 +163,7 @@ class Dropdown(FocasableUIElement):
 		return optionlist
 	def render(self, mouse, width):
 		# Render the text box
-		retext = settings["font"].render(self.options[self.selected], True, WHITE)
+		retext = settings["font"].render(self.getSelected(), True, WHITE)
 		r = pygame.Surface((width - 20, retext.get_height()))
 		r.fill(BLACK)
 		r.blit(retext, (0, 0))
@@ -195,7 +201,7 @@ class Dropdown(FocasableUIElement):
 			return
 		self.selected = y - 1
 		self.focused = False
-	def __repr__(self): return f"UIElement (Dropdown \"{self.options[self.selected]}\")"
+	def __repr__(self): return f"UIElement (Dropdown \"{self.getSelected()}\")"
 
 class UI:
 	"""A UI to be drawn to the screen. Contains a list of UIElements."""
@@ -273,7 +279,7 @@ def listmenu(getitemcallback: "typing.Callable[[function], list[UIElement]]") ->
 	"""Displays a UI, with options for each element to return a specific value."""
 	ui = UI() # Create the UI
 	finished = [False, None] # 1st item stops the mainloop, 2nd item stores the selected item
-	def finish(v):
+	def finish(v = None):
 		finished[0] = True
 		finished[1] = v
 	for item in getitemcallback(finish):
