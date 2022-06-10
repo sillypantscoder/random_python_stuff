@@ -110,7 +110,7 @@ def mist(i: pygame.Surface) -> pygame.Surface:
 	return r
 
 def swirl(i: pygame.Surface) -> pygame.Surface:
-	"""Swirls the image :)"""
+	"""Swirls the image"""
 	img = i.copy()
 	col0 = 0.5 * (float(img.get_width())  - 1.0)
 	row0 = 0.5 * (float(img.get_height()) - 1.0)
@@ -174,7 +174,68 @@ def pixel_lines(i: pygame.Surface) -> pygame.Surface:
 				#lastPixel = prev
 	return pygame.transform.scale(r, (i.get_width(), i.get_height()))
 
-transforms = [chop, flip, rotate, roll, negate, addborder, addline, negate_random, shift, highlight, mist, swirl, amplify, pixel_lines]
+def deform(i: pygame.Surface) -> pygame.Surface:
+	"""Deforms the image using a twin dragon curve"""
+	def roll(i: pygame.Surface, offset: "tuple[int, int]") -> pygame.Surface:
+		"""Rolls the image by some number of pixels"""
+		r = pygame.Surface(i.get_size())
+		r.blit(i, offset)
+		r.blit(i, (offset[0] - i.get_width(), offset[1]                 ))
+		r.blit(i, (offset[0]                , offset[1] - i.get_height()))
+		r.blit(i, (offset[0] + i.get_width(), offset[1]                 ))
+		r.blit(r, (offset[0]                , offset[1] + i.get_height()))
+		return r.copy()
+	# SETUP
+	img_width, img_height = i.get_size()
+	num_bands = 4
+	shift_by = img_width // 8
+	shift_vertical = True
+	# EDITING
+	for iteration in range(50):
+		# 1. Shift the image
+		if not shift_vertical:
+			band_height = img_height / num_bands
+			bands = [i.subsurface(pygame.Rect(0, t * band_height, img_width, band_height)) for t in range(num_bands)]
+			shiftedbands: "list[pygame.Surface]" = []
+			#u.add(ui.Header("Bands"))
+			sh = 1
+			for i in bands:
+				shiftedbands.append(roll(i, (shift_by * sh, 0)))
+				sh *= -1
+				#u.add(ui.Image(i))
+			#u.add(ui.Header("Rolled Image"))
+			#for i in shiftedbands:
+				#u.add(ui.Image(i))
+				#u.add(ui.Spacer(10))
+			i = pygame.Surface((img_width, img_height))
+			for t in range(num_bands):
+				i.blit(shiftedbands[t], (0, t * band_height))
+		else:
+			band_width = img_width / num_bands
+			bands = [i.subsurface(pygame.Rect(t * band_width, 0, band_width, img_height)) for t in range(num_bands)]
+			shiftedbands: "list[pygame.Surface]" = []
+			#u.add(ui.Header("Bands"))
+			sh = -1
+			for i in bands:
+				shiftedbands.append(roll(i, (0, shift_by * sh)))
+				sh *= -1
+				#u.add(ui.Image(i))
+			#u.add(ui.Header("Rolled Image"))
+			#for i in shiftedbands:
+				#u.add(ui.Image(i))
+				#u.add(ui.Spacer(10))
+			i = pygame.Surface((img_width, img_height))
+			for t in range(num_bands):
+				i.blit(shiftedbands[t], (t * band_width, 0))
+		# 2. Prepare the image for the next step
+		num_bands *= 2
+		shift_by //= 2
+		shift_vertical = not shift_vertical
+		if shift_by == 0:
+			break
+	return i
+
+transforms = [chop, flip, rotate, roll, negate, addborder, addline, negate_random, shift, highlight, mist, swirl, amplify, pixel_lines, deform]
 
 if __name__ == "__main__":
 	inputfilename = sys.argv[1]
