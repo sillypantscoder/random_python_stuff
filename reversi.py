@@ -1,5 +1,6 @@
 import pygame
 import random
+import os
 
 # Board status constants
 EMPTY = 0
@@ -84,7 +85,12 @@ DARKGREEN = (0, 155, 0)
 BLUE = (0, 0, 255)
 
 scale = 100
-screen = pygame.display.set_mode((boardsize * scale, boardsize * scale))
+if "DISABLEGRAPHICS" in os.environ and os.environ["DISABLEGRAPHICS"] == "True":
+	DISABLEGRAPHICS = True
+	screen = pygame.Surface((boardsize * scale, boardsize * scale))
+else:
+	DISABLEGRAPHICS = False
+	screen = pygame.display.set_mode((boardsize * scale, boardsize * scale))
 
 # Set up the AIs and players
 def AIGetMove_Random(board: Board, selfTile: int):
@@ -117,27 +123,55 @@ def AIGetMove_Corners(board: Board, selfTile: int):
 			bestScore = score
 			bestMove = move
 	return bestMove
+def AIGetMove_Worst(board: Board, selfTile: int):
+	# Get the worst move
+	validMoves = board.getValidMoves(selfTile)
+	validMoves = board.getValidMoves(selfTile)
+	bestMove = validMoves[0]
+	bestScore = boardsize ** 2
+	for move in validMoves:
+		boardCopy = Board(board)
+		boardCopy.makeMove(selfTile, move[0], move[1])
+		boardCopy[move[0]][move[1]] = selfTile
+		score = boardCopy.getScore(selfTile)
+		if score < bestScore:
+			bestScore = score
+			bestMove = move
+	return bestMove
+def AIGetMove_Centers(board: Board, selfTile: int):
+	# Get the move closest to the center
+	validMoves = board.getValidMoves(selfTile)
+	bestMove = validMoves[0]
+	bestScore = boardsize ** 2
+	for move in validMoves:
+		dist = abs(move[0] - boardsize//2) + abs(move[1] - boardsize//2)
+		score = dist
+		if score < bestScore:
+			bestScore = score
+			bestMove = move
+	return bestMove
 
-playerBlackAI = None
-playerWhiteAI = AIGetMove_Best
+playerBlackAI = AIGetMove_Centers
+playerWhiteAI = None
 
 # Main loop
 running = True
 c = pygame.time.Clock()
 while running:
 	# Check for events
-	for event in pygame.event.get():
-		if event.type == pygame.QUIT:
-			running = False
-		elif event.type == pygame.MOUSEBUTTONDOWN:
-			# Get the position of the mouse click
-			x, y = pygame.mouse.get_pos()
-			x //= scale
-			y //= scale
-			# Move
-			if BOARD.isValidMove(turn, x, y):
-				BOARD.makeMove(turn, x, y)
-				turn = BLACKTILE if turn == WHITETILE else WHITETILE
+	if not DISABLEGRAPHICS:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				running = False
+			elif event.type == pygame.MOUSEBUTTONDOWN:
+				# Get the position of the mouse click
+				x, y = pygame.mouse.get_pos()
+				x //= scale
+				y //= scale
+				# Move
+				if BOARD.isValidMove(turn, x, y):
+					BOARD.makeMove(turn, x, y)
+					turn = BLACKTILE if turn == WHITETILE else WHITETILE
 	# Draw the board
 	screen.fill(GREEN)
 	for x in range(boardsize):
@@ -155,6 +189,16 @@ while running:
 	# Handle AI
 	if len(BOARD.getValidMoves(turn)) == 0:
 		turn = BLACKTILE if turn == WHITETILE else WHITETILE
+		if "AUTOSTOP" in os.environ and os.environ["AUTOSTOP"] == "True":
+			running = False
+			print("BLACK", BOARD.getScore(BLACKTILE))
+			print("WHITE", BOARD.getScore(WHITETILE))
+			if BOARD.getScore(BLACKTILE) > BOARD.getScore(WHITETILE):
+				print("WINNER: BLACK")
+			elif BOARD.getScore(BLACKTILE) < BOARD.getScore(WHITETILE):
+				print("WINNER: WHITE")
+			else:
+				print("WINNER: TIE")
 	else:
 		if turn == BLACKTILE:
 			if playerBlackAI != None:
@@ -167,5 +211,8 @@ while running:
 				BOARD.makeMove(WHITETILE, x, y)
 				turn = BLACKTILE
 	# Flip the screen
-	c.tick(60)
-	pygame.display.flip()
+	if "DISABLEGRAPHICS" in os.environ and os.environ["DISABLEGRAPHICS"] == "True":
+		pass
+	else:
+		c.tick(60)
+		pygame.display.flip()
