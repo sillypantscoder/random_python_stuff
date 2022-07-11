@@ -1,4 +1,5 @@
 import pygame
+import random
 
 # Board status constants
 EMPTY = 0
@@ -45,11 +46,28 @@ class Board:
 				if currentPos[0] == x and currentPos[1] == y:
 					break
 	def isValidMove(self, selfTile, x: int, y: int):
+		# Make sure tile is empty
+		if self.board[x][y] != EMPTY:
+			return False
 		# Copy the board, make the move, and check if the move is valid
 		boardCopy = Board(self)
 		boardCopy.makeMove(selfTile, x, y)
 		boardCopy[x][y] = self[x][y]
 		return boardCopy != self
+	def getValidMoves(self, selfTile):
+		moves = []
+		for x in range(boardsize):
+			for y in range(boardsize):
+				if self.isValidMove(selfTile, x, y):
+					moves.append([x, y])
+		return moves
+	def getScore(self, selfTile):
+		score = 0
+		for x in range(boardsize):
+			for y in range(boardsize):
+				if self.board[x][y] == selfTile:
+					score += 1
+		return score
 	def __getitem__(self, key: int):
 		return self.board[key]
 	def __eq__(self, other):
@@ -67,6 +85,41 @@ BLUE = (0, 0, 255)
 
 scale = 100
 screen = pygame.display.set_mode((boardsize * scale, boardsize * scale))
+
+# Set up the AIs and players
+def AIGetMove_Random(board: Board, selfTile: int):
+	# Get a random move
+	validMoves = board.getValidMoves(selfTile)
+	return random.choice(validMoves)
+def AIGetMove_Best(board: Board, selfTile: int):
+	# Get the best move
+	validMoves = board.getValidMoves(selfTile)
+	bestMove = validMoves[0]
+	bestScore = -1
+	for move in validMoves:
+		boardCopy = Board(board)
+		boardCopy.makeMove(selfTile, move[0], move[1])
+		boardCopy[move[0]][move[1]] = selfTile
+		score = boardCopy.getScore(selfTile)
+		if score > bestScore:
+			bestScore = score
+			bestMove = move
+	return bestMove
+def AIGetMove_Corners(board: Board, selfTile: int):
+	# Get the move closest to the corners
+	validMoves = board.getValidMoves(selfTile)
+	bestMove = validMoves[0]
+	bestScore = -1
+	for move in validMoves:
+		dist = abs(move[0] - boardsize//2) + abs(move[1] - boardsize//2)
+		score = dist
+		if score > bestScore:
+			bestScore = score
+			bestMove = move
+	return bestMove
+
+playerBlackAI = None
+playerWhiteAI = AIGetMove_Best
 
 # Main loop
 running = True
@@ -99,6 +152,20 @@ while running:
 			elif BOARD[x][y] == WHITETILE:
 				pygame.draw.circle(screen, (255, 255, 255), (x * scale + (scale / 2), y * scale + (scale / 2)), 50)
 	pygame.draw.rect(screen, BLACK if turn == BLACKTILE else WHITE, screen.get_rect(), 10)
+	# Handle AI
+	if len(BOARD.getValidMoves(turn)) == 0:
+		turn = BLACKTILE if turn == WHITETILE else WHITETILE
+	else:
+		if turn == BLACKTILE:
+			if playerBlackAI != None:
+				x, y = playerBlackAI(BOARD, BLACKTILE)
+				BOARD.makeMove(BLACKTILE, x, y)
+				turn = WHITETILE
+		elif turn == WHITETILE:
+			if playerWhiteAI != None:
+				x, y = playerWhiteAI(BOARD, WHITETILE)
+				BOARD.makeMove(WHITETILE, x, y)
+				turn = BLACKTILE
 	# Flip the screen
 	c.tick(60)
 	pygame.display.flip()
