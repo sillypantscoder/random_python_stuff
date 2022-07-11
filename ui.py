@@ -1,6 +1,5 @@
 import pygame
 import typing
-import helpers
 
 settings = {}
 
