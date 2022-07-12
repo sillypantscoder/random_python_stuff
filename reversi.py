@@ -24,7 +24,7 @@ class Board:
 		enemyTile = BLACKTILE if selfTile == WHITETILE else WHITETILE
 		self.board[x][y] = selfTile
 		# Check for captures
-		for offset in [[0, -1], [0, 1], [-1, 0], [1, 0]]:
+		for offset in [[0, -1], [0, 1], [-1, 0], [1, 0], [1, 1], [-1, -1], [1, -1], [-1, 1]]:
 			currentPos = [x + offset[0], y + offset[1]]
 			found = 1
 			while True:
@@ -150,10 +150,45 @@ def AIGetMove_Centers(board: Board, selfTile: int):
 			bestScore = score
 			bestMove = move
 	return bestMove
+def AIGetMove_Left(board: Board, selfTile: int):
+	# Get the move closest to the left
+	validMoves = board.getValidMoves(selfTile)
+	bestMove = validMoves[0]
+	bestScore = boardsize + 1
+	for move in validMoves:
+		score = move[0]
+		if score < bestScore:
+			bestScore = score
+			bestMove = move
+	return bestMove
+def AIGetMove_Cutoff(board: Board, selfTile: int):
+	# Get the move that will result in the least number of possible opponent moves
+	validMoves = board.getValidMoves(selfTile)
+	bestMove = validMoves[0]
+	bestScore = boardsize ** 2
+	for move in validMoves:
+		boardCopy = Board(board)
+		boardCopy.makeMove(selfTile, move[0], move[1])
+		boardCopy[move[0]][move[1]] = selfTile
+		score = len(boardCopy.getValidMoves(BLACKTILE if selfTile == WHITETILE else WHITETILE))
+		if score < bestScore:
+			bestScore = score
+			bestMove = move
+	return bestMove
 
-playerBlackAI = AIGetMove_Centers
-playerWhiteAI = None
+# AI ranking:
+# [Best]
+# 1. cutoff
+# 2. corners
+# 3. best
+# 4. random
+# 5. centers
+# 6. left
+# 7. worst
+# [Worst]
 
+playerBlackAI = AIGetMove_Random
+playerWhiteAI = AIGetMove_Left
 # Main loop
 running = True
 c = pygame.time.Clock()
@@ -182,14 +217,16 @@ while running:
 				if BOARD.isValidMove(turn, x, y):
 					pygame.draw.circle(screen, BLUE, (x * scale + scale // 2, y * scale + scale // 2), scale // 10)
 			if BOARD[x][y] == BLACKTILE:
-				pygame.draw.circle(screen, (0, 0, 0), (x * scale + (scale / 2), y * scale + (scale / 2)), 50)
+				pygame.draw.circle(screen, (0, 0, 0), (x * scale + (scale / 2), y * scale + (scale / 2)), scale // 2)
 			elif BOARD[x][y] == WHITETILE:
-				pygame.draw.circle(screen, (255, 255, 255), (x * scale + (scale / 2), y * scale + (scale / 2)), 50)
-	pygame.draw.rect(screen, BLACK if turn == BLACKTILE else WHITE, screen.get_rect(), 10)
+				pygame.draw.circle(screen, (255, 255, 255), (x * scale + (scale / 2), y * scale + (scale / 2)), scale // 2)
+	pygame.draw.rect(screen, BLACK if turn == BLACKTILE else WHITE, screen.get_rect(), scale // 10)
 	# Handle AI
 	if len(BOARD.getValidMoves(turn)) == 0:
 		turn = BLACKTILE if turn == WHITETILE else WHITETILE
-		if "AUTOSTOP" in os.environ and os.environ["AUTOSTOP"] == "True":
+		if "AUTOSTOP" in os.environ and os.environ["AUTOSTOP"] == "False":
+			pass
+		else:
 			running = False
 			print("BLACK", BOARD.getScore(BLACKTILE))
 			print("WHITE", BOARD.getScore(WHITETILE))
