@@ -1,6 +1,9 @@
 import pygame
 import random
 import os
+import ui
+
+ui.autoinit()
 
 # Board status constants
 EMPTY = 0
@@ -84,7 +87,7 @@ GREEN = (0, 255, 0)
 DARKGREEN = (0, 155, 0)
 BLUE = (0, 0, 255)
 
-scale = 100
+scale = 90
 if "DISABLEGRAPHICS" in os.environ and os.environ["DISABLEGRAPHICS"] == "True":
 	DISABLEGRAPHICS = True
 	screen = pygame.Surface((boardsize * scale, boardsize * scale))
@@ -187,8 +190,60 @@ def AIGetMove_Cutoff(board: Board, selfTile: int):
 # 7. worst
 # [Worst]
 
-playerBlackAI = AIGetMove_Random
-playerWhiteAI = AIGetMove_Left
+def getAISelectionScreen(player):
+	def scr(e):
+		return [
+			ui.Header("Select AI for " + player),
+			ui.Button("Player").addclick(lambda: e(None)),
+			ui.Option("Cutoff").addclick(lambda: e(AIGetMove_Cutoff)),
+			ui.Option("Corners").addclick(lambda: e(AIGetMove_Corners)),
+			ui.Option("Best").addclick(lambda: e(AIGetMove_Best)),
+			ui.Option("Random").addclick(lambda: e(AIGetMove_Random)),
+			ui.Option("Centers").addclick(lambda: e(AIGetMove_Centers)),
+			ui.Option("Left").addclick(lambda: e(AIGetMove_Left)),
+			ui.Option("Worst").addclick(lambda: e(AIGetMove_Worst))
+		]
+	return scr
+
+playerBlackAI = ui.listmenu(getAISelectionScreen("Black"))
+playerWhiteAI = ui.listmenu(getAISelectionScreen("White"))
+
+
+def end_screen():
+	ui.settings["screen"] = pygame.display.set_mode(screen.get_size(), pygame.RESIZABLE)
+	boardscr = pygame.Surface(screen.get_size())
+	boardscr.fill(GREEN)
+	for x in range(boardsize):
+		for y in range(boardsize):
+			pygame.draw.rect(boardscr, DARKGREEN, pygame.Rect(x * scale, y * scale, scale, scale), scale // 10)
+			if BOARD[x][y] == BLACKTILE:
+				pygame.draw.circle(boardscr, (0, 0, 0), (x * scale + (scale / 2), y * scale + (scale / 2)), scale // 2)
+			elif BOARD[x][y] == WHITETILE:
+				pygame.draw.circle(boardscr, (255, 255, 255), (x * scale + (scale / 2), y * scale + (scale / 2)), scale // 2)
+
+	u = ui.UI()
+	u.add(ui.Header("Game Over"))
+	u.add(ui.Text("Black: " + str(BOARD.getScore(BLACKTILE))))
+	u.add(ui.Text("White: " + str(BOARD.getScore(WHITETILE))))
+	u.add(ui.Text(""))
+	if BOARD.getScore(BLACKTILE) > BOARD.getScore(WHITETILE):
+		u.add(ui.Text("Black wins!"))
+	elif BOARD.getScore(BLACKTILE) < BOARD.getScore(WHITETILE):
+		u.add(ui.Text("White wins!"))
+	else:
+		u.add(ui.Text("Tie!"))
+	u.add(ui.Button("Exit"))
+	u.add(ui.Text(""))
+	u.add(ui.Text(""))
+	u.add(ui.Text("Board:"))
+	u.add(ui.Text(""))
+	u.add(ui.Image(boardscr))
+
+	ui.uimenu(u)
+	pygame.quit()
+	exit()
+
+
 # Main loop
 running = True
 c = pygame.time.Clock()
@@ -224,18 +279,16 @@ while running:
 	# Handle AI
 	if len(BOARD.getValidMoves(turn)) == 0:
 		turn = BLACKTILE if turn == WHITETILE else WHITETILE
-		if "AUTOSTOP" in os.environ and os.environ["AUTOSTOP"] == "False":
-			pass
-		else:
-			running = False
-			print("BLACK", BOARD.getScore(BLACKTILE))
-			print("WHITE", BOARD.getScore(WHITETILE))
-			if BOARD.getScore(BLACKTILE) > BOARD.getScore(WHITETILE):
-				print("WINNER: BLACK")
-			elif BOARD.getScore(BLACKTILE) < BOARD.getScore(WHITETILE):
-				print("WINNER: WHITE")
-			else:
-				print("WINNER: TIE")
+		gameover = True
+		for x in range(boardsize):
+			for y in range(boardsize):
+				if BOARD.isValidMove(BLACKTILE, x, y):
+					gameover = False
+				if BOARD.isValidMove(WHITETILE, x, y):
+					gameover = False
+		if gameover:
+			# Game over
+			end_screen()
 	else:
 		if turn == BLACKTILE:
 			if playerBlackAI != None:

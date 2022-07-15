@@ -173,7 +173,7 @@ class Dropdown(FocasableUIElement):
 		arrow = [(padding, padding), (sol.get_height() - (padding * 2), sol.get_height() // 2), (padding, sol.get_height() - padding)]
 		if self.focused:
 			pygame.draw.rect(sol, WHITE, (5, 5, width - 10, r.get_height() + 10), 1)
-			pygame.draw.polygon(sol, WHITE, [helpers.rotateC(((sol.get_height() // 4) + (padding // 2), sol.get_height() // 2), p, 90) for p in arrow])
+			pygame.draw.polygon(sol, WHITE, [rotateC(((sol.get_height() // 4) + (padding // 2), sol.get_height() // 2), p, 90) for p in arrow])
 		else:
 			# Draw triangle
 			pygame.draw.polygon(sol, WHITE, arrow)
@@ -206,6 +206,7 @@ class UI:
 	"""A UI to be drawn to the screen. Contains a list of UIElements."""
 	def __init__(self):
 		self.items: list[UIElement] = []
+		self.scrolloffset = 0
 	def add(self, item: UIElement):
 		self.items.append(item)
 		return self
@@ -217,7 +218,7 @@ class UI:
 		scrn_width, scrn_height = settings["screen"].get_size()
 		# Render the items:
 		rendered_items = []
-		cum_y = 0
+		cum_y = 0 - self.scrolloffset
 		for item in self.items:
 			i = item.render(False, scrn_width)
 			if i.get_rect().move(0, cum_y).collidepoint(mousepos):
@@ -235,10 +236,20 @@ class UI:
 		# Draw all the items onto the screen
 		ret = pygame.Surface((scrn_width, scrn_height))
 		ret.fill(WHITE)
-		cum_y = 0
+		cum_y = 0 - self.scrolloffset
+		total_height = 0
 		for item in rendered_items:
 			ret.blit(item, (0, cum_y))
 			cum_y += item.get_height()
+			total_height += item.get_height()
+		# Fix scroll offset
+		if total_height < scrn_height:
+			self.scrolloffset = self.scrolloffset // 2
+		else:
+			if self.scrolloffset < 0:
+				self.scrolloffset = self.scrolloffset // 2
+			if self.scrolloffset > total_height - scrn_height:
+				self.scrolloffset = (total_height - scrn_height) + ((self.scrolloffset - (total_height - scrn_height)) // 2)
 		return ret
 	def __repr__(self): return f"UI [ {', '.join([str(i) for i in self.items])} ]"
 
@@ -250,7 +261,13 @@ def render_ui(ui: UI):
 			pygame.quit(); exit()
 			# User clicked close button
 		if event.type == pygame.MOUSEBUTTONUP:
-			clicked = True
+			# Detect scrolling
+			if event.button in [4, 5]:
+				# Scrolling handled later in MOUSEWHEEL
+				pass
+			elif event.button in [1, 3]:
+				# Click or right click
+				clicked = True
 		if event.type == pygame.VIDEORESIZE:
 			settings["screen"] = pygame.display.set_mode(event.dict['size'], pygame.RESIZABLE)
 		if event.type == pygame.KEYDOWN:
@@ -262,6 +279,10 @@ def render_ui(ui: UI):
 				if isinstance(item, KeyboardInput) and item.focused:
 					if event.unicode in item.allowedChars:
 						item.text += event.unicode
+		if event.type == pygame.MOUSEWHEEL:
+			# User is scrolling
+			ui.scrolloffset -= event.y * 20
+			#print(event.x, event.y)
 	m = pygame.mouse.get_pos()
 	settings["screen"].blit(ui.render(m, clicked), (0, 0))
 	pygame.display.flip()
