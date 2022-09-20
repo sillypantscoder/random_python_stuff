@@ -23,26 +23,36 @@ def _setscrnsize(size, flags = 0):
 	return screen
 display.set_mode = _setscrnsize
 
-clickpositions = []
+events = []
+keys = [False for x in range(512)]
+K_UP = 341
+K_LEFT = 332
+K_DOWN = 324
+K_RIGHT = 338
+class CustomMouseDownEvent:
+	def __init__(self, pos):
+		self.type = MOUSEBUTTONDOWN
+		self.pos = (*pos,)
+class CustomKeyDownEvent:
+	def __init__(self, key):
+		self.type = KEYDOWN
+		self.key = key
+class CustomKeyUpEvent:
+	def __init__(self, key):
+		self.type = KEYUP
+		self.key = key
 def _getevents():
-	global clickpositions
-	global mousepos
-	class CustomEvent:
-		def __init__(self, x, y):
-			self.type = MOUSEBUTTONDOWN
-			self.pos = (x, y)
-	r = [CustomEvent(*p) for p in clickpositions]
-	if len(clickpositions) > 0:
-		mousepos = r[-1].pos
-	clickpositions = []
+	global events
+	r = [p for p in events]
+	events = []
 	return r
 event.get = _getevents
 
 def _getkeypresses():
-	class BlankKeyMap:
+	class CustomKeyMap:
 		def __getitem__(self, a):
-			return False
-	return BlankKeyMap()
+			return keys[a]
+	return CustomKeyMap()
 key.get_pressed = _getkeypresses
 
 def _getScreenURL():
@@ -99,6 +109,20 @@ var u = function () {
 	x.send();
 }
 console.log(setInterval(u, 300));
+function getCharCode(c) {
+	if (c.length >= 6) return 256 + c[5].charCodeAt();
+	return c.charCodeAt();
+}
+window.addEventListener("keydown", (e) => {
+	var x = new XMLHttpRequest();
+	x.open("POST", "/keydown");
+	x.send(getCharCode(e.key));
+})
+window.addEventListener("keyup", (e) => {
+	var x = new XMLHttpRequest();
+	x.open("POST", "/keyup");
+	x.send(getCharCode(e.key));
+})
 </script>
 	\n</body></html>"""
 		}
@@ -122,9 +146,29 @@ console.log(setInterval(u, 300));
 		}
 
 def post(path, body):
+	global mousepos
 	if path == "/click":
 		pos = [int(body.decode("UTF-8").split("\n")[0]), int(body.decode("UTF-8").split("\n")[1])]
-		clickpositions.append(pos)
+		mousepos = pos
+		events.append(CustomMouseDownEvent(pos))
+		return {
+			"status": 200,
+			"headers": {},
+			"content": ""
+		}
+	elif path == "/keydown":
+		k = int(body.decode("UTF-8"))
+		keys[k] = True
+		events.append(CustomKeyDownEvent(k))
+		return {
+			"status": 200,
+			"headers": {},
+			"content": ""
+		}
+	elif path == "/keyup":
+		k = int(body.decode("UTF-8"))
+		keys[k] = False
+		events.append(CustomKeyUpEvent(k))
 		return {
 			"status": 200,
 			"headers": {},
